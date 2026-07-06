@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root,
+[data-theme="dark"] {
+  --color-spotify: #1db954;
+  --color-spotify-hover: #1ed760;
+
+  --bg-base: #000000;
+  --bg-surface: #121212;
+  --bg-elevated: #181818;
+  --bg-highlight: #282828;
+
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-subdued: #727272;
+
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.3);
+  --overlay: rgba(0, 0, 0, 0.7);
+
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --hover-bg-subtle: rgba(255, 255, 255, 0.05);
+
+  --play-button-bg: #ffffff;
+  --play-button-icon: #000000;
+
+  --scrollbar-thumb: #555;
+  --scrollbar-thumb-hover: #888;
+
+  --skeleton-from: #282828;
+  --skeleton-to: #383838;
+
+  --autofill-bg: #282828;
+  --autofill-text: #ffffff;
+
+  --input-bg: #282828;
+  --toast-bg: #282828;
+  --toast-border: #404040;
+  --toast-color: #fff;
+}
+
+[data-theme="light"] {
+  --bg-base: #f0f0f0;
+  --bg-surface: #f9f9f9;
+  --bg-elevated: #ffffff;
+  --bg-highlight: #e5e5e5;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-subdued: #9ca3af;
+
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.3);
+  --overlay: rgba(255, 255, 255, 0.7);
+
+  --hover-bg: rgba(0, 0, 0, 0.08);
+  --hover-bg-subtle: rgba(0, 0, 0, 0.04);
+
+  --play-button-bg: #22c55e;
+  --play-button-icon: #ffffff;
+
+  --scrollbar-thumb: #c0c0c0;
+  --scrollbar-thumb-hover: #a0a0a0;
+
+  --skeleton-from: #e5e5e5;
+  --skeleton-to: #d0d0d0;
+
+  --autofill-bg: #ffffff;
+  --autofill-text: #111827;
+
+  --input-bg: #ffffff;
+  --toast-bg: #ffffff;
+  --toast-border: #e5e5e5;
+  --toast-color: #111827;
+}
+
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px var(--autofill-bg) inset !important;
+  -webkit-text-fill-color: var(--autofill-text) !important;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-to) 50%, var(--skeleton-from) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+input,
+select,
+textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+}
