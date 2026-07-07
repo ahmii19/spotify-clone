@@ -44,7 +44,9 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isRefreshEndpoint = originalRequest?.url?.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -82,5 +84,18 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const refreshAccessToken = async () => {
+  try {
+    const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+    if (data.success) {
+      store.dispatch(setAccessToken(data.data.accessToken));
+      return data.data.accessToken;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
 
 export default api;

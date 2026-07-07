@@ -1,13 +1,27 @@
 import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/token.js';
 
+const getCookieOptions = () => ({
+  httpOnly: true,
+  secure: true,
+  sameSite: 'none',
+  path: '/',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
+
+const getClearCookieOptions = () => ({
+  httpOnly: true,
+  secure: true,
+  sameSite: 'none',
+  path: '/',
+});
+
 export const setRefreshTokenCookie = (res, token) => {
-  res.cookie('refreshToken', token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie('refreshToken', token, getCookieOptions());
+};
+
+export const clearRefreshTokenCookie = (res) => {
+  res.clearCookie('refreshToken', getClearCookieOptions());
 };
 
 export const refreshAccessToken = async (refreshToken) => {

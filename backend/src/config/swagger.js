@@ -1,6 +1,8 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
+const API_URL = process.env.API_URL || 'http://localhost:5000';
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -9,7 +11,7 @@ const options = {
       version: '1.0.0',
       description: 'Complete Spotify Clone Backend API Documentation',
     },
-    servers: [{ url: 'http://localhost:5000', description: 'Development server' }],
+    servers: [{ url: API_URL, description: 'API server' }],
     components: {
       securitySchemes: {
         bearerAuth: {

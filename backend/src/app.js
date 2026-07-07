@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -20,7 +21,17 @@ import searchRoutes from './routes/search.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import { swaggerServe, swaggerSetup } from './config/swagger.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -29,29 +40,39 @@ const allowedOrigins = [
   'http://localhost:3000',
 ].filter(Boolean);
 
+const uniqueOrigins = [...new Set(allowedOrigins)];
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({
+
+const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || uniqueOrigins.includes(origin)) {
       callback(null, true);
+    } else if (isProduction) {
+      const clientOrigin = process.env.CLIENT_URL?.replace(/\/+$/, '');
+      callback(null, origin === clientOrigin);
     } else {
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
+      callback(null, origin);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-}));
-app.options('*', cors());
-app.use(morgan('dev'));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+app.use(morgan(isProduction ? 'combined' : 'dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(compression());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: 'Server is running' });
+});
 
 const skipOnOptions = (req) => req.method === 'OPTIONS';
 
@@ -78,7 +99,10 @@ const generalLimiter = rateLimit({
 
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
-app.use('/api/songs', uploadLimiter);
+app.use('/api/songs', (req, res, next) => {
+  if (['POST', 'PUT'].includes(req.method)) return uploadLimiter(req, res, next);
+  next();
+});
 app.use('/api/artists', (req, res, next) => {
   if (['POST', 'PUT'].includes(req.method)) return uploadLimiter(req, res, next);
   next();
@@ -101,10 +125,6 @@ app.use('/api/history', historyRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/analytics', analyticsRoutes);
-
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Server is running' });
-});
 
 app.use(errorHandler);
 

@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/token.js';
 import { sendResponse, sendError } from '../utils/response.js';
-import { setRefreshTokenCookie } from '../services/tokenService.js';
+import { setRefreshTokenCookie, clearRefreshTokenCookie } from '../services/tokenService.js';
 
 export const register = async (req, res, next) => {
   try {
@@ -54,7 +54,7 @@ export const logout = async (req, res, next) => {
         await user.save();
       }
     }
-    res.clearCookie('refreshToken');
+    clearRefreshTokenCookie(res);
     sendResponse(res, 200, null, 'Logged out successfully');
   } catch (error) {
     next(error);
