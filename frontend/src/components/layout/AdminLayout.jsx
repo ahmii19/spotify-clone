@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Music, Disc3, Mic2, Users, FolderOpen, BarChart3,
   FileText, Settings, LogOut, ChevronLeft, ChevronRight, Menu, X,
-  Bell, Search, Sun, Moon, User,
+  Bell, Search, Sun, Moon, User, Upload,
 } from 'lucide-react';
 import { logout } from '../../redux/slices/authSlice';
 import { clearPlayer } from '../../redux/slices/playerSlice';
@@ -13,6 +13,7 @@ import { useTheme } from '../../context/ThemeContext';
 
 const sidebarLinks = [
   { to: '/admin', end: true, label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/upload-song', label: 'Upload Song', icon: Upload },
   { to: '/admin/manage-songs', label: 'Songs', icon: Music },
   { to: '/admin/albums', label: 'Albums', icon: Disc3 },
   { to: '/admin/artists', label: 'Artists', icon: Mic2 },
