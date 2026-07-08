@@ -30,38 +30,51 @@ export const AuthProvider = ({ children }) => {
 
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem('accessToken');
+      console.log('[AUTH] initializeAuth called. Has stored token:', !!storedToken);
 
       if (!storedToken) {
+        console.log('[AUTH] No stored token, logging out');
         dispatch(logout());
         dispatch(setLoading(false));
         return;
       }
 
-      if (isTokenExpired(storedToken)) {
+      const expired = isTokenExpired(storedToken);
+      console.log('[AUTH] Token expired:', expired);
+
+      if (expired) {
         try {
+          console.log('[AUTH] Attempting refresh...');
           const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
           if (data.success) {
             const newToken = data.data.accessToken;
+            console.log('[AUTH] Refresh succeeded, new token stored');
             localStorage.setItem('accessToken', newToken);
             dispatch(setAccessToken(newToken));
           }
-        } catch {
+        } catch (err) {
+          console.warn('[AUTH] Refresh failed, using stored token as-is:', err.response?.data?.message || err.message);
           dispatch(setAccessToken(storedToken));
         }
       } else {
+        console.log('[AUTH] Token valid, setting in store');
         dispatch(setAccessToken(storedToken));
       }
 
       try {
+        console.log('[AUTH] Fetching profile...');
         const { data } = await getProfile();
         if (data.success) {
           const currentToken = store.getState().auth.accessToken;
+          console.log('[AUTH] Profile fetched, user role:', data.data.user?.role);
           dispatch(setCredentials({ user: data.data.user, accessToken: currentToken }));
         } else {
+          console.warn('[AUTH] Profile fetch failed (success false)');
           localStorage.removeItem('accessToken');
           dispatch(logout());
         }
-      } catch {
+      } catch (err) {
+        console.error('[AUTH] Profile fetch error:', err.response?.data?.message || err.message);
         localStorage.removeItem('accessToken');
         dispatch(logout());
       } finally {

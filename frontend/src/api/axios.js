@@ -29,6 +29,8 @@ api.interceptors.request.use(
     const token = store.getState().auth.accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('[AXIOS] No token in store for request:', config.url);
     }
     return config;
   },
@@ -45,8 +47,10 @@ api.interceptors.response.use(
     }
 
     const isRefreshEndpoint = originalRequest?.url?.includes('/auth/refresh');
+    const isLoginEndpoint = originalRequest?.url?.includes('/auth/login');
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshEndpoint && !isLoginEndpoint) {
+      console.warn('[AXIOS] 401 on', originalRequest.url, '- triggering token refresh');
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -62,17 +66,21 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        console.log('[AXIOS] Attempting token refresh...');
         const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
         if (data.success) {
+          console.log('[AXIOS] Token refresh succeeded');
           store.dispatch(setAccessToken(data.data.accessToken));
           processQueue(null, data.data.accessToken);
           originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
           return api(originalRequest);
         }
+        console.warn('[AXIOS] Token refresh failed - success false');
         processQueue(new Error('Refresh failed'));
         store.dispatch(logout());
         return Promise.reject(error);
       } catch (refreshError) {
+        console.error('[AXIOS] Token refresh error:', refreshError.response?.data?.message || refreshError.message);
         processQueue(refreshError);
         store.dispatch(logout());
         return Promise.reject(refreshError);

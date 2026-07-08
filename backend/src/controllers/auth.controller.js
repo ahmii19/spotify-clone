@@ -33,6 +33,9 @@ export const login = async (req, res, next) => {
     if (!isMatch) {
       return sendError(res, 401, 'Invalid email or password');
     }
+    if (user.isBlocked) {
+      return sendError(res, 403, 'Your account has been blocked');
+    }
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
     user.refreshToken = refreshToken;
@@ -65,11 +68,29 @@ export const refresh = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
+      console.warn('[REFRESH] No refresh token in cookies. Cookies:', JSON.stringify(req.cookies));
       return sendError(res, 401, 'No refresh token');
     }
-    const decoded = verifyRefreshToken(refreshToken);
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (jwtError) {
+      console.error('[REFRESH] JWT verify failed:', jwtError.name, jwtError.message);
+      if (jwtError.name === 'TokenExpiredError') {
+        return sendError(res, 401, 'Refresh token expired');
+      }
+      if (jwtError.name === 'JsonWebTokenError') {
+        return sendError(res, 401, 'Invalid refresh token signature');
+      }
+      return sendError(res, 401, 'Invalid refresh token');
+    }
     const user = await User.findById(decoded.id);
-    if (!user || user.refreshToken !== refreshToken) {
+    if (!user) {
+      console.warn('[REFRESH] User not found for id:', decoded.id);
+      return sendError(res, 401, 'Invalid refresh token');
+    }
+    if (user.refreshToken !== refreshToken) {
+      console.warn('[REFRESH] Token mismatch. Stored:', user.refreshToken?.slice(0, 20) + '...', 'Received:', refreshToken?.slice(0, 20) + '...');
       return sendError(res, 401, 'Invalid refresh token');
     }
     const accessToken = generateAccessToken(user._id);
@@ -77,8 +98,10 @@ export const refresh = async (req, res, next) => {
     user.refreshToken = newRefreshToken;
     await user.save();
     setRefreshTokenCookie(res, newRefreshToken);
+    console.log('[REFRESH] Token refreshed successfully for user:', user._id.toString());
     sendResponse(res, 200, { accessToken }, 'Token refreshed');
   } catch (error) {
+    console.error('[REFRESH] Unexpected error:', error.message);
     return sendError(res, 401, 'Invalid refresh token');
   }
 };
