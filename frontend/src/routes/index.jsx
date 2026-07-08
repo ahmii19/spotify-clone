@@ -24,6 +24,8 @@ const ManageAlbums = lazy(() => import('../pages/admin/ManageAlbums'));
 const ManageUsers = lazy(() => import('../pages/admin/ManageUsers'));
 const ManagePlaylists = lazy(() => import('../pages/admin/ManagePlaylists'));
 const Analytics = lazy(() => import('../pages/admin/Analytics'));
+const AdminSettings = lazy(() => import('../pages/admin/Settings'));
+const AdminReports = lazy(() => import('../pages/admin/Reports'));
 
 function PageLoader() {
   return (
@@ -74,6 +76,8 @@ export default function AppRoutes() {
             <Route path="users" element={<ManageUsers />} />
             <Route path="playlists" element={<ManagePlaylists />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="reports" element={<AdminReports />} />
           </Route>
         </Routes>
       </Suspense>
